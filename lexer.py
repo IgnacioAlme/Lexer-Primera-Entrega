@@ -1,13 +1,16 @@
 import lex
+from lex import TOKEN
 
 resul_lexema = []
 #Lista de tokens
-tokens = (
+tokens = [
     'IDENTIFICADOR',
     'NUMERO',
+    'CADENA',
     'ASIGNAR',
-    'CARACTER',
+    'COMENTARIO',
 
+    #Operadores
     'SUMA',
     'RESTA',
     'MULT',
@@ -15,12 +18,6 @@ tokens = (
     'POT',
     'MOD',
 
-    #Condicionales
-    'SI',
-    'SINO',
-    #Ciclos
-    'MIENTRAS',
-    'PARA',
     #Lógica
     'AND',
     'OR',
@@ -31,6 +28,7 @@ tokens = (
     'IGUAL',
     'MENORIGUAL',
     'DISTINTO',
+
     #Símbolos
     'NUMERAL',
     'PARIZQ',
@@ -39,15 +37,39 @@ tokens = (
     'CORDER',
     'LLAIZQ',
     'LLADER',
+    'ESPACIO',
+    'PUNTOCOMA'
+]
 
-)
+reservadas = {
+    #'_div'      :'DIV',
+    #'_mod'      :'MOD',
+    '_o'        :'O',
+    'leer'      :'LEER',
+    'escribir'  :'ESCRIBIR',
+    'si'        :'SI',
+    'entonces'  :'ENTONCES',
+    'sino'      :'SINO',
+    'fin_si'    :'FINSI',
+    'mientras'  :'MIENTRAS',
+    'hacer'     :'HACER',
+    'fin_mientras':'FINMIENTRAS',
+    'repetir'   :'REPETIR',
+    'hasta_que' :'HASTAQUE',
+    'para'      :'PARA',
+    'hasta'     :'HASTA',
+    'fin_para'  :'FINPARA',
+    'segun'     :'SEGUN',
+    'fin_segun' :'FINSEGUN',
+    'accion'    :'ACCION',
+    '_es'       :'ES',
+    'fin_accion':'FINACCION',
+    'proceso'   :'PROCESO',
+    'ambiente'  :'AMBIENTE'
+}
 
-reservadas = (
-
-)
-
-#tokens = tokens+list(reservadas.values())
-
+tokens = tokens+list(reservadas.values())
+t_ignore = '\t'
 #Reglas de expresiones regulares
 t_SUMA = r'\+'
 t_RESTA = r'-'
@@ -55,8 +77,9 @@ t_MULT = r'\*'
 t_DIV =  r'/'
 t_MOD = r'\%'
 t_POT = r'\*{2} | \^'
+ 
 
-t_ASIGNAR = r'='
+t_ASIGNAR = r'\:='
 
 #Expresiones lógicas
 t_AND = r'\&'
@@ -70,7 +93,32 @@ t_LLAIZQ = r'\{'
 t_LLADER = r'\}'
 
 #Caracteres ignorados
-#t_ignorado = '\t'
+
+
+
+#Si se descomenta esto solo reconoce las palabras reservadas
+'''
+digit            = r'([0-9])'
+nondigit         = r'([_A-Za-z])'
+identifier       = r'(' + nondigit + r'(' + digit + r'|' + nondigit + r')*)' 
+@TOKEN(identifier)
+def t_ID(t):
+    r'[a-zA-Z_][a-zA-Z_0-9]*'
+    try:
+        t.type = reservadas.get(t.value,'ID')    #Revisa las palabras reservadas
+    except ValueError:
+        pass
+    return t
+'''
+def t_CADENA(t):
+     r'[a-zA-Z ][a-zA-Z ]*'
+     return t
+
+
+def t_COMENTARIO(t):
+    r'\#.*'
+    pass
+    #No devuleve ningún valor
 
 def t_NUMERO(t):
     r'\d+'
@@ -81,33 +129,14 @@ def t_NUMERO(t):
         t.value = 0
     return t
 
-def t_sino(t):
-    r'sino'
-    return t
-
-def t_si(t):
-    r'si'
-    return t
-
-def t_cadena(t):
-    r'\"?(\w+ \ *\w*\d9 \ *)"?'
 
 
-
-def t_comentario_unalinea(t):
-    r'\/\/(.)*\n'
-    t.lexer.lineno += 1
-    print("Comentario de una linea.")
 
 def t_error(t):
     global resul_lexema
     estado = "** Token no válido en la línea {:4} Valor {:16} Posición {:4}".format(str(t.lineno), str(t.value), str(t.lexpos))
     resul_lexema.append(estado)
     t.lexer.skip(1)
-
-def t_CARACTER(t):
-     r'[a-zA-Z]'
-     return t
 
 #Prueba de ingreso
 def prueba(data):
@@ -121,7 +150,7 @@ def prueba(data):
         tok = analizador.token()
         if not tok:
             break
-        estado = "Linea {:4} Tipo {:16} Valor {:16} Posicion {:4}/n".format(str(tok.lineno), str(tok.type), str(tok.value), str(tok.lexpos))
+        estado = "***Linea {:4} Tipo {:16} Valor {:16} Posicion {:4}***".format(str(tok.lineno), str(tok.type), str(tok.value), str(tok.lexpos))
         resul_lexema.append(estado)
     return resul_lexema
 
