@@ -1,10 +1,14 @@
 import lex
 from lex import TOKEN
+import re
+import codecs
+import os
+import sys
 
 resul_lexema = []
 #Lista de tokens
 tokens = [
-    'IDENTIFICADOR',
+    'VARIABLE',
     'NUMERO',
     'CADENA',
     'ASIGNAR',
@@ -17,6 +21,8 @@ tokens = [
     'DIV',
     'POT',
     'MOD',
+    'PP',
+    'MM',
 
     #Lógica
     'AND',
@@ -38,7 +44,13 @@ tokens = [
     'LLAIZQ',
     'LLADER',
     'ESPACIO',
-    'PUNTOCOMA'
+    'PUNTOCOMA',
+
+    #Especiales
+    'VERT',
+    'NEWLINE',
+    'SP',
+    'CARR'
 ]
 
 reservadas = {
@@ -69,10 +81,12 @@ reservadas = {
 }
 
 tokens = tokens+list(reservadas.values())
-t_ignore = '\t'
+
 #Reglas de expresiones regulares
 t_SUMA = r'\+'
+t_PP = r'\+\+'
 t_RESTA = r'-'
+t_MM = r'--'
 t_MULT = r'\*'
 t_DIV =  r'/'
 t_MOD = r'\%'
@@ -93,32 +107,22 @@ t_LLAIZQ = r'\{'
 t_LLADER = r'\}'
 
 #Caracteres ignorados
+t_ignore = '\t'
+t_ignore_VERT = r'[\v]'
+t_ignore_NEWLINE = r'[\n]'
+t_ignore_SP = r'[\s]'
+t_ignore_CARR = r'[\r]'
 
-
+def t_ccode_nonspace(t):
+ r'\s+'
+ pass
 
 #Si se descomenta esto solo reconoce las palabras reservadas
-'''
-digit            = r'([0-9])'
-nondigit         = r'([_A-Za-z])'
-identifier       = r'(' + nondigit + r'(' + digit + r'|' + nondigit + r')*)' 
-@TOKEN(identifier)
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
-    try:
-        t.type = reservadas.get(t.value,'ID')    #Revisa las palabras reservadas
-    except ValueError:
-        pass
+    t.type = reservadas.get(t.value.lower(),'ID')    #Revisa las palabras reservadas
     return t
-'''
-def t_CADENA(t):
-     r'[a-zA-Z ][a-zA-Z ]*'
-     return t
 
-
-def t_COMENTARIO(t):
-    r'\#.*'
-    pass
-    #No devuleve ningún valor
 
 def t_NUMERO(t):
     r'\d+'
@@ -129,12 +133,19 @@ def t_NUMERO(t):
         t.value = 0
     return t
 
+def t_CADENA(t):
+     r'"[a-zA-Z/0-9._+áéíóú,ñ:"()#¿?!¡:\\ ]+"'
+     return t
 
 
+def t_COMENTARIO(t):
+    r'\#.*'
+    pass
+    #No devuleve ningún valor
 
 def t_error(t):
     global resul_lexema
-    estado = "** Token no válido en la línea {:4} Valor {:16} Posición {:4}".format(str(t.lineno), str(t.value), str(t.lexpos))
+    estado = "** Token no válido en la línea [{:4}] Valor [{:16}] Posición [{:4}]".format(str(t.lineno), str(t.value), str(t.lexpos))
     resul_lexema.append(estado)
     t.lexer.skip(1)
 
