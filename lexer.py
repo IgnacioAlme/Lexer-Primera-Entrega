@@ -1,9 +1,5 @@
 import lex
 from lex import TOKEN
-import re
-import codecs
-import os
-import sys
 
 resul_lexema = []
 #Lista de tokens
